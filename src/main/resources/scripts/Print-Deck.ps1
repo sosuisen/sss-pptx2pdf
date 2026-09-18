@@ -35,22 +35,27 @@ $DM_ORIENTATION = 0x1; $DM_PAPERSIZE = 0x2
 $DMORIENT_LANDSCAPE = 2; $DMPAPER_A3 = 8
 $OFF_FIELDS = 72; $OFF_ORIENTATION = 76; $OFF_PAPERSIZE = 78
 
-function Get-UserDevMode([IntPtr]$h) {
-    # PRINTER_INFO_9 = { LPDEVMODE pDevMode }. GetPrinter level 9 returns the user's preferences.
+function Get-DevMode([IntPtr]$h, [uint32]$level) {
+    # PRINTER_INFO_8 (level 8, global defaults) and PRINTER_INFO_9 (level 9, the current user's
+    # preferences) are both { LPDEVMODE pDevMode }. Returns $null when the printer has no DEVMODE
+    # at that level; level 9 is NULL until the user saves printing preferences once.
     $needed = 0
-    [void][Native.Winspool]::GetPrinter($h, 9, [IntPtr]::Zero, 0, [ref]$needed)
-    if ($needed -eq 0) { throw "GetPrinter(9) failed: $([Runtime.InteropServices.Marshal]::GetLastWin32Error())" }
+    [void][Native.Winspool]::GetPrinter($h, $level, [IntPtr]::Zero, 0, [ref]$needed)
+    if ($needed -eq 0) { throw "GetPrinter($level) failed: $([Runtime.InteropServices.Marshal]::GetLastWin32Error())" }
     $buf = [Runtime.InteropServices.Marshal]::AllocHGlobal($needed)
-    if (-not [Native.Winspool]::GetPrinter($h, 9, $buf, $needed, [ref]$needed)) {
-        throw "GetPrinter(9) failed: $([Runtime.InteropServices.Marshal]::GetLastWin32Error())"
+    try {
+        if (-not [Native.Winspool]::GetPrinter($h, $level, $buf, $needed, [ref]$needed)) {
+            throw "GetPrinter($level) failed: $([Runtime.InteropServices.Marshal]::GetLastWin32Error())"
+        }
+        $pDevMode = [Runtime.InteropServices.Marshal]::ReadIntPtr($buf)
+        if ($pDevMode -eq [IntPtr]::Zero) { return $null }
+        $size = [Runtime.InteropServices.Marshal]::ReadInt16($pDevMode, 68) + [Runtime.InteropServices.Marshal]::ReadInt16($pDevMode, 70)  # dmSize + dmDriverExtra
+        $copy = New-Object byte[] $size
+        [Runtime.InteropServices.Marshal]::Copy($pDevMode, $copy, 0, $size)
+        return $copy
+    } finally {
+        [Runtime.InteropServices.Marshal]::FreeHGlobal($buf)
     }
-    $pDevMode = [Runtime.InteropServices.Marshal]::ReadIntPtr($buf)
-    if ($pDevMode -eq [IntPtr]::Zero) { throw "the printer has no per-user DEVMODE" }
-    $size = [Runtime.InteropServices.Marshal]::ReadInt16($pDevMode, 68) + [Runtime.InteropServices.Marshal]::ReadInt16($pDevMode, 70)  # dmSize + dmDriverExtra
-    $copy = New-Object byte[] $size
-    [Runtime.InteropServices.Marshal]::Copy($pDevMode, $copy, 0, $size)
-    [Runtime.InteropServices.Marshal]::FreeHGlobal($buf)
-    return $copy
 }
 
 function Set-UserDevMode([IntPtr]$h, [byte[]]$devMode) {
@@ -78,10 +83,14 @@ $hPrinter = [IntPtr]::Zero
 if (-not [Native.Winspool]::OpenPrinter($Printer, [ref]$hPrinter, [IntPtr]::Zero)) {
     throw "OpenPrinter failed: $([Runtime.InteropServices.Marshal]::GetLastWin32Error())"
 }
-$original = Get-UserDevMode $hPrinter
+# The user's own preferences (level 9) are restored afterwards. When the user has none yet,
+# the global defaults (level 8) are the base, and the user's preferences end up equal to them.
+$original = Get-DevMode $hPrinter 9
+$base = if ($null -ne $original) { $original } else { Get-DevMode $hPrinter 8 }
+if ($null -eq $base) { throw "the printer '$Printer' has no DEVMODE (neither per-user nor default)" }
 $app = $null; $pres = $null; $createdApp = $false
 try {
-    Set-UserDevMode $hPrinter (With-A3Landscape $original)
+    Set-UserDevMode $hPrinter (With-A3Landscape $base)
     try { $app = [Runtime.InteropServices.Marshal]::GetActiveObject('PowerPoint.Application') }
     catch { $app = New-Object -ComObject PowerPoint.Application; $createdApp = $true }
     $abs = [IO.Path]::GetFullPath($Path)
@@ -110,6 +119,6 @@ try {
 } finally {
     if ($pres) { $pres.Close() }
     if ($createdApp -and $app) { $app.Quit() }
-    Set-UserDevMode $hPrinter $original
+    Set-UserDevMode $hPrinter $(if ($null -ne $original) { $original } else { $base })
     [void][Native.Winspool]::ClosePrinter($hPrinter)
 }
