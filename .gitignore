@@ -1,0 +1,6 @@
+target/
+.claude
+CLAUDE.md
+*.log
+.$*.bkp
+.vscode/
