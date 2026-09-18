@@ -197,6 +197,7 @@
             <option>-Dfile.encoding=UTF-8</option>
           </javaOptions>
           <type>${jpackage.type}</type>
+          <icon>${jpackage.icon}</icon>
         </configuration>
       </plugin>
     </plugins>
@@ -213,6 +214,7 @@
       <properties>
         <!-- APP_IMAGE or MSI. MSI needs WiX. -->
         <jpackage.type>APP_IMAGE</jpackage.type>
+        <jpackage.icon>${project.basedir}/images/icon.ico</jpackage.icon>
       </properties>
       <build>
         <plugins>
@@ -257,6 +259,7 @@
       </activation>
       <properties>
         <jpackage.type>DMG</jpackage.type>
+        <jpackage.icon>${project.basedir}/images/icon.icns</jpackage.icon>
       </properties>
     </profile>
     <profile>
@@ -268,6 +271,7 @@
       </activation>
       <properties>
         <jpackage.type>APP_IMAGE</jpackage.type>
+        <jpackage.icon>${project.basedir}/images/icon.png</jpackage.icon>
       </properties>
     </profile>
   </profiles>

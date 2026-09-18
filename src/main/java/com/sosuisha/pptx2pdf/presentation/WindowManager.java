@@ -4,12 +4,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 /**
  * Manages views and shows them in windows.
  */
 public class WindowManager {
+    private static final String APP_ICON_RESOURCE = "/images/icon.png";
+
     private final Map<Class<? extends View>, View> views = new HashMap<>();
 
     /**
@@ -44,7 +47,7 @@ public class WindowManager {
     /**
      * Shows the registered view of the given class in the given stage. The
      * stage is shown with the style that the view declares by
-     * {@link View#stageStyle()}.
+     * {@link View#stageStyle()} and with the app icon.
      *
      * @param viewClass class of the view to show
      * @param stage     stage to show the view in
@@ -57,6 +60,15 @@ public class WindowManager {
         stage.initStyle(view.stageStyle());
         stage.setScene(view.getScene());
         stage.setTitle(view.getTitle());
+        stage.getIcons().add(appIcon());
         stage.show();
+    }
+
+    private static Image appIcon() {
+        var url = Objects.requireNonNull(
+            WindowManager.class.getResource(APP_ICON_RESOURCE),
+            "the app icon must be on the classpath: " + APP_ICON_RESOURCE
+        );
+        return new Image(url.toExternalForm());
     }
 }
