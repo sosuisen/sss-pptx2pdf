@@ -1,4 +1,4 @@
-# SSS pptx2pdf
+# sss-pptx2pdf
 
 A small JavaFX tool that turns PowerPoint decks (`.pptx`) into PDF files whose
 pages have exactly the slide size (for example 16:9).
