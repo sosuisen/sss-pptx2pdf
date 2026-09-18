@@ -6,7 +6,7 @@
   <groupId>com.sosuisha</groupId>
   <artifactId>sss-pptx2pdf</artifactId>
   <version>1.0-SNAPSHOT</version>
-  <description>SSS pptx2pdf - prints PowerPoint decks to PDF files of exactly the slide size</description>
+  <description>sss-pptx2pdf - prints PowerPoint decks to PDF files of exactly the slide size</description>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <javafx.plugin.version>0.0.8</javafx.plugin.version>

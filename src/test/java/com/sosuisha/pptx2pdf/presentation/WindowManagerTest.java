@@ -21,40 +21,40 @@ import javafx.stage.Stage;
 
 @ExtendWith(ApplicationExtension.class)
 class WindowManagerTest {
-    private static MainView newMainView() {
-        return new MainView(
-            new MainViewModel(new ConversionAppModel(new NullDeckConverter()), List::of)
-        );
-    }
+  private static MainView newMainView() {
+    return new MainView(
+      new MainViewModel(new ConversionAppModel(new NullDeckConverter()), List::of)
+    );
+  }
 
-    @Test
-    @DisplayName("登録したViewをクラス指定で取得できる")
-    void returns_the_registered_view_by_its_class() {
-        var windowManager = new WindowManager();
-        var view = newMainView();
-        windowManager.registerView(view);
+  @Test
+  @DisplayName("登録したViewをクラス指定で取得できる")
+  void returns_the_registered_view_by_its_class() {
+    var windowManager = new WindowManager();
+    var view = newMainView();
+    windowManager.registerView(view);
 
-        assertSame(view, windowManager.getView(MainView.class));
-    }
+    assertSame(view, windowManager.getView(MainView.class));
+  }
 
-    @Test
-    @DisplayName("未登録のViewを要求するとIllegalArgumentExceptionになる")
-    void requesting_an_unregistered_view_throws_illegal_argument_exception() {
-        var windowManager = new WindowManager();
+  @Test
+  @DisplayName("未登録のViewを要求するとIllegalArgumentExceptionになる")
+  void requesting_an_unregistered_view_throws_illegal_argument_exception() {
+    var windowManager = new WindowManager();
 
-        assertThrows(IllegalArgumentException.class, () -> windowManager.getView(MainView.class));
-    }
+    assertThrows(IllegalArgumentException.class, () -> windowManager.getView(MainView.class));
+  }
 
-    @Test
-    @DisplayName("showWindowすると、ウィンドウのアイコンにアプリのアイコン（images/icon.png）が設定される")
-    void show_window_sets_the_app_icon_on_the_window(FxRobot robot) {
-        var windowManager = new WindowManager();
-        windowManager.registerView(newMainView());
+  @Test
+  @DisplayName("showWindowすると、ウィンドウのアイコンにアプリのアイコン（images/icon.png）が設定される")
+  void show_window_sets_the_app_icon_on_the_window(FxRobot robot) {
+    var windowManager = new WindowManager();
+    windowManager.registerView(newMainView());
 
-        robot.interact(() -> windowManager.showWindow(MainView.class, new Stage()));
+    robot.interact(() -> windowManager.showWindow(MainView.class, new Stage()));
 
-        var window = (Stage) robot.window("SSS pptx2pdf");
-        assertEquals(1, window.getIcons().size());
-        assertEquals(256, window.getIcons().getFirst().getWidth());
-    }
+    var window = (Stage) robot.window("sss-pptx2pdf");
+    assertEquals(1, window.getIcons().size());
+    assertEquals(256, window.getIcons().getFirst().getWidth());
+  }
 }

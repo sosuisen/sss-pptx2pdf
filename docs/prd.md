@@ -1,4 +1,4 @@
-# PRD: SSS pptx2pdf
+# PRD: sss-pptx2pdf
 
 ## 背景
 
